@@ -20,5 +20,4 @@ add_executable(${PROJECT_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
-# Подключение библиотеки потоков к целевому исполняемому файлу
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
