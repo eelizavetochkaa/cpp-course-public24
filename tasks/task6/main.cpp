@@ -24,12 +24,14 @@
 #include <iostream>
 #include <algorithm>
 #include <iomanip>
+#include <mutex>
 
 
 class Integral {
 private:
     int a, b, n, tn;
-
+    double result;
+    std::mutex result_mutex;
 public:
     Integral(int& argc, char** argv) {
         if (argc != 5) {
@@ -39,18 +41,42 @@ public:
         b  = std::stoi(argv[2]);
         n  = std::stoi(argv[3]);
         tn = std::stoi(argv[4]);
+        result = 0.0;
     }
 
 
     static double integralFunction(double x) {
-        // тут нужно реализовать функцию интеграла S(a, b) = (1+e^x)^0.5 dx
-        return 0;
+        return std::sqrt(1 + std::exp(x));
     }
 
 
     double calculateIntegral() {
-        // в зависимости от количество потоков (tn) реализуйте подсчёт интеграла
-        return 0;
+        std::vector<std::thread> threads;
+        double h = static_cast<double>(b - a) / n;
+        int chunk_size = n / tn;
+
+        for (int i = 0; i < tn; ++i) {
+            threads.emplace_back([this, h, chunk_size, i]() {
+                int start = i * chunk_size;
+                int end = (i == tn - 1) ? n : start + chunk_size;
+                double partial_sum = 0.0;
+
+                for (int j = start; j < end; ++j) {
+                    double x1 = a + j * h;
+                    double x2 = a + (j + 1) * h;
+                    partial_sum += (integralFunction(x1) + integralFunction(x2)) * h / 2.0;
+                }
+
+                std::lock_guard<std::mutex> lock(result_mutex);
+                result += partial_sum;
+            });
+        }
+
+        for (auto& thread : threads) {
+            thread.join();
+        }
+
+        return result;
     }
 
 };
@@ -59,7 +85,7 @@ public:
 
 int main(int argc, char** argv)
 {
-    auto i = Integral(argc, argv);
+    Integral i(argc, argv);
     std::cout << std::fixed << std::setprecision (4);
     std::cout << i.calculateIntegral() << std::endl;
     return 0;
