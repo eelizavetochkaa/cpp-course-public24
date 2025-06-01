@@ -86,7 +86,7 @@ public:
 int main(int argc, char** argv)
 {
     Integral i(argc, argv);
-    std::cout << std::fixed << std::setprecision (4);
+    std::cout << std::fixed;
     std::cout << i.calculateIntegral() << std::endl;
     return 0;
 }
